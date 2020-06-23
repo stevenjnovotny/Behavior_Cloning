@@ -17,6 +17,7 @@ The goals / steps of this project are the following:
 [image5]: ./examples/recovery3.jpg "Recovery Image"
 [image6]: ./examples/normal_image.jpg "Normal Image"
 [image7]: ./examples/flipped_image.jpg "Flipped Image"
+[image8]: ./examples/Simulator.png "Flipped Image"
 
 ## Overall Project Outline
 
@@ -27,6 +28,8 @@ The goals / steps of this project are the following:
 * model.h5 contains a trained convolution neural network 
 * README.md summarizes the results
 * run1.mp4 video showing vehicle negotiating the track using model.h5
+
+![alt text][image8]
 
 #### 2. Driving the car in autonomous mode
 Using the Udacity simulator and the drive.py file, the car can be driven autonomously around the track by opening the simulator and then executing the following on the command line 
