@@ -8,20 +8,20 @@ with open('./driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         # columns in line:
-        # centere camera, right camera, left camera, steering angle, throttle, brake, speed
+        # center camera, right camera, left camera, steering angle, throttle, brake, speed
         samples.append(line)
 
-# print(samples[0])
-# name = './IMG/' + samples[0][0].split('/')[-1]
-# image = cv2.imread(name)
-# plt.imsave('image.jpg', image)        
-        
+      
+# split data into training and validation sets
+
 from sklearn.model_selection import train_test_split
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 print('Training samples: %d' % len(train_samples))
 print('Validation samples: %d' % len(validation_samples))
-     
+
+# prepare for handling the data
+# - include a flippeed version of each image in the test set   
 
 import cv2
 import numpy as np
@@ -61,7 +61,7 @@ batch_size = 32
 # compile and train model using generators
 
 from keras.models import Sequential, Model
-from keras.layers import Lambda, Dense, Cropping2D, Flatten, Conv2D
+from keras.layers import Lambda, Dense, Cropping2D, Flatten, Conv2D, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 train_generator = generator(train_samples, batch_size = batch_size)
@@ -71,6 +71,8 @@ ch, row, col = 3, 160, 320   # image size
 model = Sequential()
 
 # preprocessing: normalize, center around zero, stdev = 1.0
+# architecture: then use a slightly modified version of the NVIDIA autonomous
+# car neural network. 
 
 model.add(Lambda(lambda x: x/127.5 - 1., input_shape = (row, col, ch)))
 model.add(Cropping2D(cropping=((70,25),(0,0))))
@@ -79,6 +81,7 @@ model.add(Conv2D(36, (5,5), strides=(2,2), activation='relu'))
 model.add(Conv2D(48, (5,5), strides=(2,2), activation='relu'))
 model.add(Conv2D(64, (3,3), activation='relu'))
 model.add(Conv2D(128, (3,3), activation='relu'))
+model.add(Dropout(0.5))
 model.add(Flatten())
 model.add(Dense(100))
 model.add(Dense(50))
@@ -96,6 +99,7 @@ input = Input(shape=(
 
 """
 
+# add keras checkpoints to reecord model and prevent overfitting
 
 checkpoint = ModelCheckpoint(filepath = './model.h5', monitor='val_loss', save_best_only=True)
 stopper = EarlyStopping(monitor='val_loss', min_delta=0.0, patience=5, mode='min')
@@ -108,7 +112,8 @@ history_object = model.fit_generator(train_generator, \
                     epochs = 30, verbose = 1, callbacks=[checkpoint, stopper])
 
 print(history_object.history.keys())
-#print(history_object.history)
+
+# plot the training curve
 
 fig = plt.figure(figsize=(8, 3), dpi=80)
 plt.plot(history_object.history['loss'][1:])
